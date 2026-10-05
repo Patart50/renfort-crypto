@@ -4,11 +4,12 @@
  * dans les composants : aucun bouton « Calculer ».
  */
 import { defaultForm, type Form, type Mode } from '../core/calc';
-import { loadTicker, priceEur, roundPrice, PriceFetchError } from '../prices/binance';
+import { loadTicker, priceEur, roundPrice, PriceFetchError } from 'commun-crypto/binance';
 import { readShareFragment } from '../export/scenario';
-import { openStore, readJson, removeKey, writeJson } from './storage';
+import { openLocalStore } from 'commun-crypto/storage';
+import { isTheme, type Theme } from 'commun-crypto/theme';
 
-export type Theme = 'auto' | 'light' | 'dark';
+export type { Theme };
 
 export interface Settings {
   theme: Theme;
@@ -18,7 +19,6 @@ export interface Settings {
 
 const SETTINGS_KEY = 'reglages';
 const FORM_KEY = 'formulaire';
-const THEMES: readonly Theme[] = ['auto', 'light', 'dark'];
 const MODES: readonly Mode[] = ['target', 'budget'];
 
 /** Formulaire relu depuis le stockage ou un lien : champs inconnus ignorés, chaînes seulement. */
@@ -36,7 +36,7 @@ function sanitize(raw: unknown): Form | null {
 }
 
 class AppState {
-  private readonly storage = openStore();
+  private readonly storage = openLocalStore('renfort-crypto:');
   readonly persistent = this.storage.persistent;
 
   form = $state<Form>(defaultForm());
@@ -53,12 +53,12 @@ class AppState {
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   init(hash = location.hash) {
-    const saved = readJson<Partial<Settings>>(this.storage.store, SETTINGS_KEY);
-    if (saved?.theme && THEMES.includes(saved.theme)) this.settings.theme = saved.theme;
+    const saved = this.storage.readJson<Partial<Settings>>(SETTINGS_KEY);
+    if (isTheme(saved?.theme)) this.settings.theme = saved.theme;
     if (saved?.allowPriceFetch === true) this.settings.allowPriceFetch = true;
 
     if (!this.openShare(hash)) {
-      const form = sanitize(readJson(this.storage.store, FORM_KEY));
+      const form = sanitize(this.storage.readJson(FORM_KEY));
       if (form) this.form = form;
     }
   }
@@ -76,12 +76,12 @@ class AppState {
   }
 
   saveForm() {
-    writeJson(this.storage.store, FORM_KEY, this.form);
+    this.storage.writeJson(FORM_KEY, this.form);
   }
 
   resetForm() {
     this.form = defaultForm();
-    removeKey(this.storage.store, FORM_KEY);
+    this.storage.remove(FORM_KEY);
     this.priceRoute = null;
     this.priceMessage = null;
     this.notify('Formulaire effacé.');
@@ -89,12 +89,12 @@ class AppState {
 
   setTheme(theme: Theme) {
     this.settings.theme = theme;
-    writeJson(this.storage.store, SETTINGS_KEY, this.settings);
+    this.storage.writeJson(SETTINGS_KEY, this.settings);
   }
 
   setConsent(allow: boolean) {
     this.settings.allowPriceFetch = allow;
-    writeJson(this.storage.store, SETTINGS_KEY, this.settings);
+    this.storage.writeJson(SETTINGS_KEY, this.settings);
     if (!allow && this.priceStatus === 'consent') this.priceStatus = 'idle';
   }
 

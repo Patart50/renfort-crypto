@@ -4,12 +4,14 @@
   import { compute, parseForm, type Field } from './lib/core/calc';
   import PositionForm from './lib/ui/PositionForm.svelte';
   import Results from './lib/ui/Results.svelte';
-  import ThemeToggle from './lib/ui/ThemeToggle.svelte';
+  import ThemeToggle from 'commun-crypto/ui/ThemeToggle.svelte';
+  import { applyTheme } from 'commun-crypto/theme';
+  import { SUPPORT_INTRO } from './lib/ui/supportIntro';
   import About from './lib/ui/About.svelte';
-  import Support from './lib/ui/Support.svelte';
-  import { AUTHOR } from './lib/support';
-  import { eur, eurPrice } from './lib/core/format';
-  import { amountToInvest } from './lib/core/renfort';
+  import Support from 'commun-crypto/ui/Support.svelte';
+  import { AUTHOR } from 'commun-crypto/support';
+  import { eur, eurPrice } from 'commun-crypto/format';
+  import { amountToInvest } from 'commun-crypto/renfort';
 
   // Deux vues : le calculateur et la page « À propos et limites » (#a-propos).
   const readView = () => (location.hash === '#a-propos' ? 'a-propos' : 'calculateur');
@@ -35,9 +37,7 @@
   });
 
   $effect(() => {
-    const theme = app.settings.theme;
-    if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', theme);
+    applyTheme(app.settings.theme);
   });
 
   // Le formulaire est gardé sur l'appareil à chaque modification (D-008).
@@ -92,7 +92,7 @@
         >
         100 % local
       </span>
-      <ThemeToggle />
+      <ThemeToggle theme={app.settings.theme} onchange={(t) => app.setTheme(t)} />
     </div>
   </div>
 </header>
@@ -145,7 +145,7 @@
     <a href="#a-propos">À propos et limites</a> · v{__APP_VERSION__}
   </p>
   <p class="credit">
-    Créé par <a href={AUTHOR.url} target="_blank" rel="noopener author">{AUTHOR.name} ({AUTHOR.handle})</a> · <Support />
+    Créé par <a href={AUTHOR.url} target="_blank" rel="noopener author">{AUTHOR.name} ({AUTHOR.handle})</a> · <Support intro={SUPPORT_INTRO} />
   </p>
 </footer>
 

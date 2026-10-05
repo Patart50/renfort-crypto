@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PositionSummary, Result } from '../core/calc';
-  import { eur, eurPrice, eurSigned, pct, qty } from '../core/format';
-  import { amountToInvest } from '../core/renfort';
+  import { eur, eurPrice, eurSigned, pct, qty } from 'commun-crypto/format';
+  import { amountToInvest } from 'commun-crypto/renfort';
   import { targetStatusText } from '../export/scenario';
   import XYChart from './XYChart.svelte';
   import ExportPanel from './ExportPanel.svelte';

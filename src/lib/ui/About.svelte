@@ -3,8 +3,9 @@
    * Page « À propos et limites » : ce que fait l'outil, ce qu'il envoie, sa méthode et ses limites.
    * Structure reprise de dca-crypto (commit 9414232, About.svelte).
    */
-  import { AUTHOR, SPONSORS_URL } from '../support';
-  import Support from './Support.svelte';
+  import { AUTHOR, SPONSORS_URL } from 'commun-crypto/support';
+  import Support from 'commun-crypto/ui/Support.svelte';
+  import { SUPPORT_INTRO } from './supportIntro';
 
   const version = __APP_VERSION__;
   const repo = 'https://github.com/Patart50/renfort-crypto';
@@ -122,7 +123,7 @@
     <h2>Auteur et soutien</h2>
     <p>
       Créé et maintenu par <a href={AUTHOR.url} target="_blank" rel="noopener author">{AUTHOR.name} ({AUTHOR.handle})</a>, sur son temps libre. L'outil est
-      gratuit et le restera. Pour le soutenir : <a href={SPONSORS_URL} target="_blank" rel="noopener">GitHub Sponsors</a>, ou en crypto, <Support />.
+      gratuit et le restera. Pour le soutenir : <a href={SPONSORS_URL} target="_blank" rel="noopener">GitHub Sponsors</a>, ou en crypto, <Support intro={SUPPORT_INTRO} />.
     </p>
   </section>
 

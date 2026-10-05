@@ -23,7 +23,7 @@ Et montrer, sans jugement, ce que le renfort change à l'exposition (D-006). L'o
 
 ## 3. Calcul
 
-Code : `src/lib/core/renfort.ts` (logique pure, testée). Notations : Q quantité, PMP prix moyen, P prix d'achat, f frais d'achat, f_v frais de vente, Y cible, M montant.
+Code : `commun-crypto/renfort` (paquet commun, logique pure, testée là-bas ; D-018). Notations : Q quantité, PMP prix moyen, P prix d'achat, f frais d'achat, f_v frais de vente, Y cible, M montant.
 
 | Résultat | Formule | Fonction |
 |---|---|---|
@@ -72,7 +72,7 @@ Principes communs : thème auto / clair / sombre, hors ligne (service worker), 3
 
 ## 6. Prix et export
 
-- **Binance** (`src/lib/prices/binance.ts`, D-004, D-013) : `loadTicker` (deux hôtes, erreur claire), `priceEur` (paire EUR, puis USDT, USDC, BTC), `roundPrice`.
+- **Binance** (`commun-crypto/binance`, D-004, D-013, D-018) : `loadTicker` (deux hôtes, erreur claire), `priceEur` (paire EUR, puis USDT, USDC, BTC), `roundPrice`.
 - **Export** (`src/lib/export/scenario.ts`, D-008) : `scenarioCsv` (« ; », virgule décimale, BOM : paramètres, résultat, exposition, scénarios), `scenarioText`, `shareFragment` / `readShareFragment`.
 
 ## 7. Jalons

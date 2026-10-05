@@ -6,8 +6,8 @@
 -->
 <script lang="ts">
   import type { ChartData } from '../core/calc';
-  import { eurPrice, eurRound } from '../core/format';
-  import { dec } from '../core/money';
+  import { eurPrice, eurRound } from 'commun-crypto/format';
+  import { dec } from 'commun-crypto/money';
 
   interface Props {
     title: string;

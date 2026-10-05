@@ -1,5 +1,9 @@
 # Notes de version
 
+## 1.0.1 — Code commun
+
+- Le code partagé avec les autres outils du programme (calcul décimal, prix Binance, formules, thème, fenêtre de soutien, mode hors ligne) vient désormais du paquet commun-crypto. Aucun changement visible ; scénarios gardés sur l'appareil conservés.
+
 ## 1.0.0 — Première version stable
 
 - Page « À propos et limites » : ce que fait l'outil, vos données, méthode et formules, limites connues, avertissement, contribuer, auteur et soutien.
