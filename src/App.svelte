@@ -1,16 +1,38 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { app } from './lib/state/app.svelte';
   import { compute, parseForm, type Field } from './lib/core/calc';
   import PositionForm from './lib/ui/PositionForm.svelte';
   import Results from './lib/ui/Results.svelte';
   import ThemeToggle from './lib/ui/ThemeToggle.svelte';
+  import About from './lib/ui/About.svelte';
   import Support from './lib/ui/Support.svelte';
   import { AUTHOR } from './lib/support';
   import { eur, eurPrice } from './lib/core/format';
   import { amountToInvest } from './lib/core/renfort';
 
-  onMount(() => app.init());
+  // Deux vues : le calculateur et la page « À propos et limites » (#a-propos).
+  const readView = () => (location.hash === '#a-propos' ? 'a-propos' : 'calculateur');
+  let view = $state<'calculateur' | 'a-propos'>(readView());
+
+  onMount(() => {
+    app.init();
+    const onHash = () => {
+      // Un lien de partage collé dans un onglet déjà ouvert.
+      if (app.openShare(location.hash)) {
+        view = 'calculateur';
+        return;
+      }
+      view = readView();
+      if (view === 'a-propos') {
+        scrollTo(0, 0);
+        void tick().then(() => document.getElementById('about-title')?.focus());
+      }
+    };
+    addEventListener('hashchange', onHash);
+    if (view === 'a-propos') void tick().then(() => document.getElementById('about-title')?.focus());
+    return () => removeEventListener('hashchange', onHash);
+  });
 
   $effect(() => {
     const theme = app.settings.theme;
@@ -90,6 +112,9 @@
 
   <p class="sr-only" aria-live="polite">{announce}</p>
 
+  {#if view === 'a-propos'}
+    <About />
+  {:else}
   <div class="layout">
     <PositionForm {errors} />
 
@@ -105,17 +130,19 @@
         {#if missing.length}
           <p class="muted">Reste à renseigner : {missing.map((f) => LABELS[f]).join(', ')}.</p>
         {/if}
-        <p class="muted small">Tout le calcul se fait dans votre navigateur : rien n'est envoyé.</p>
+        <p class="muted small">Tout le calcul se fait dans votre navigateur : rien n'est envoyé. Méthode, formules et limites : <a href="#a-propos">À propos et limites</a>.</p>
       </section>
     {/if}
   </div>
+  {/if}
 </main>
 
 <footer class="foot">
   <p>
     Outil d'aide au calcul, pas un conseil en investissement. Pour la fiscalité (plus-values, formulaire 2086), voir
     <a href="https://patart50.github.io/pmpa-crypto/" target="_blank" rel="noopener">pmpa-crypto</a>. Code source libre (AGPL-3.0) sur
-    <a href="https://github.com/Patart50/renfort-crypto" rel="noopener" target="_blank">GitHub</a> · v{__APP_VERSION__}
+    <a href="https://github.com/Patart50/renfort-crypto" rel="noopener" target="_blank">GitHub</a> ·
+    <a href="#a-propos">À propos et limites</a> · v{__APP_VERSION__}
   </p>
   <p class="credit">
     Créé par <a href={AUTHOR.url} target="_blank" rel="noopener author">{AUTHOR.name} ({AUTHOR.handle})</a> · <Support />

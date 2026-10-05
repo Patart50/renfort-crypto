@@ -1,4 +1,4 @@
-# Spécification — renfort-crypto v0.2
+# Spécification — renfort-crypto v1.0
 
 Calculateur de renfort et de break-even, 100 % local, en français. Projet frère de [pmpa-crypto](https://github.com/Patart50/pmpa-crypto) et [dca-crypto](https://github.com/Patart50/dca-crypto). Toute convention de calcul est consignée dans [DECISIONS.md](DECISIONS.md).
 
@@ -65,7 +65,8 @@ Une page, deux colonnes sur grand écran (formulaire à gauche, résultats à dr
 - **Garder ou partager** (`ExportPanel.svelte`, D-008) : CSV, résumé copiable, lien de partage (D-014).
 - Formulaire gardé sur l'appareil à chaque saisie ; avertissement si le stockage est bloqué.
 - Annonce du résultat principal aux lecteurs d'écran (`aria-live`).
-- En-tête avec auteur, thème, pied de page « Créé par Arnaud (Patart50) · Soutenir le projet ». Page « À propos et limites » au J3.
+- En-tête avec auteur, thème, pied de page « Créé par Arnaud (Patart50) · Soutenir le projet ».
+- **À propos et limites** (`About.svelte`, `#a-propos`, D-017) : fonctions, données, méthode et formules, limites, avertissement, contribuer, auteur et soutien. Lien d'évitement, focus sur le titre.
 
 Principes communs : thème auto / clair / sombre, hors ligne (service worker), 375 px sans débordement, WCAG 2 AA vérifié avec axe-core.
 
@@ -78,7 +79,7 @@ Principes communs : thème auto / clair / sombre, hors ligne (service worker), 3
 
 - **J1** ✅ Spec, décisions, squelette, moteur de calcul testé, CI et déploiement (page d'attente).
 - **J2** ✅ Interface complète : saisie, deux modes, résultats, exposition, scénarios, graphique, prix Binance, sauvegarde, export, partage.
-- **J3** v1.0 : page « À propos et limites », hors ligne vérifié, accessibilité.
+- **J3** ✅ v1.0 : page « À propos et limites », hors ligne vérifié, accessibilité (D-017).
 
 ## 8. Hors périmètre v1.0
 
