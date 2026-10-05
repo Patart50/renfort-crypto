@@ -15,6 +15,8 @@ Calculateur de renfort crypto, **100 % local**, en français.
 2. **Votre objectif** : « Atteindre un prix moyen » (le montant à investir et le prix limite) ou « Investir un montant » (votre nouveau prix moyen, et le prix maximum pour atteindre une cible).
 3. **Lire le résultat** : chiffres clés, exposition avant et après, tableau si le cours baisse, graphique. Export CSV, résumé à copier ou lien de partage.
 
+La page « À propos et limites » (lien en pied de page) détaille les formules et ce que l'outil ne fait pas.
+
 ## Principes
 
 - Aucune donnée ne quitte le navigateur. Pas de compte, pas de serveur.

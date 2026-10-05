@@ -57,16 +57,22 @@ class AppState {
     if (saved?.theme && THEMES.includes(saved.theme)) this.settings.theme = saved.theme;
     if (saved?.allowPriceFetch === true) this.settings.allowPriceFetch = true;
 
-    const shared = readShareFragment(hash);
-    if (shared) {
-      this.form = shared;
-      this.fromShare = true;
-      // Le lien a servi : on le retire de la barre d'adresse (il contient la position).
-      history.replaceState(null, '', location.pathname + location.search);
-    } else {
+    if (!this.openShare(hash)) {
       const form = sanitize(readJson(this.storage.store, FORM_KEY));
       if (form) this.form = form;
     }
+  }
+
+  /** Ouvre un lien de partage (D-014) ; false si le fragment n'en est pas un. */
+  openShare(hash: string): boolean {
+    const shared = readShareFragment(hash);
+    if (!shared) return false;
+    this.form = shared;
+    this.fromShare = true;
+    this.priceRoute = null;
+    // Le lien a servi : on le retire de la barre d'adresse (il contient la position).
+    history.replaceState(null, '', location.pathname + location.search);
+    return true;
   }
 
   saveForm() {

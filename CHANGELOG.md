@@ -1,5 +1,12 @@
 # Notes de version
 
+## 1.0.0 — Première version stable
+
+- Page « À propos et limites » : ce que fait l'outil, vos données, méthode et formules, limites connues, avertissement, contribuer, auteur et soutien.
+- Un lien de partage collé dans un onglet déjà ouvert est pris en compte.
+- Hors ligne vérifié : après une première visite, l'outil, la page À propos et les polices s'ouvrent sans réseau.
+- Accessibilité : WCAG 2 AA vérifié avec axe-core sur tous les écrans et états, en clair et en sombre, sur bureau et à 375 px.
+
 ## 0.2.0 — Interface
 
 - Formulaire « Votre position » et « Votre objectif », calcul en direct, deux modes : atteindre un prix moyen ou investir un montant.

@@ -52,3 +52,6 @@ Complète D-007 : en mode montant, la courbe montre le nouveau prix moyen selon 
 
 ## D-016 ✅ Exposition au prix actuel
 Le bloc exposition (D-006) et la plus-value latente « après » sont évalués au prix actuel, même quand un prix d'achat plus bas est saisi (ordre limite) : on compare ce que vaudrait la position aujourd'hui, pas au moment hypothétique de l'achat. La baisse de 20 % part aussi du prix actuel.
+
+## D-017 ✅ Version 1.0
+Page « À propos et limites » (`#a-propos`, lien en pied de page et sous l'écran d'accueil) : ce que fait l'outil, vos données, méthode et formules, limites (renforcer n'est pas gagner, PMP par crypto ≠ base fiscale, frais en % seulement, un seul achat, prix du jour indicatif, une crypto), avertissement, contribuer, auteur et soutien (D-011). Focus déplacé sur le titre à l'ouverture. Un lien de partage collé dans un onglet déjà ouvert est lu au changement de fragment (complète D-014). Vérifié dans Chromium : lien d'évitement, hors ligne (service worker, calcul, page À propos et polices sans réseau), axe-core (WCAG 2.0/2.1 A et AA) sans violation sur tous les écrans et états, fenêtre de soutien comprise, en clair 1 280 px et en sombre 375 px ; aucune requête externe sans consentement. Release `v1.0.0` à créer par Arnaud.
