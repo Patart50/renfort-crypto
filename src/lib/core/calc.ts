@@ -2,7 +2,8 @@
  * Saisie du formulaire → valeurs validées → résultat complet d'un scénario.
  * Logique pure : l'interface n'appelle que `parseForm` et `compute`.
  */
-import { D, dec, type Dec } from './money';
+import { D, dec, type Dec } from 'commun-crypto/money';
+import { parseNumber } from 'commun-crypto/parse';
 import {
   amountForTarget,
   budgetScenarios,
@@ -22,7 +23,7 @@ import {
   type Position,
   type TargetResult,
   type TargetScenario,
-} from './renfort';
+} from 'commun-crypto/renfort';
 
 export type Mode = 'target' | 'budget';
 
@@ -64,22 +65,7 @@ export interface Values {
 
 export type ParseResult = { ok: true; values: Values } | { ok: false; errors: Partial<Record<Field, string>> };
 
-/**
- * Nombre saisi à la française ou à l'anglaise. Espaces, « € » et « % » ignorés ;
- * avec virgule et point, le dernier séparateur est décimal (« 1.234,56 », « 1,234.56 ») ;
- * seul, l'un ou l'autre est décimal. Vide : null. Illisible : RangeError.
- */
-export function parseNumber(raw: string): Dec | null {
-  const s = raw.replace(/[\s\u00a0\u202f€%]/g, '');
-  if (s === '') return null;
-  const lastComma = s.lastIndexOf(',');
-  const lastDot = s.lastIndexOf('.');
-  let normalized: string;
-  if (lastComma >= 0 && lastDot >= 0) normalized = lastComma > lastDot ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
-  else normalized = s.replace(',', '.');
-  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(normalized)) throw new RangeError(`Nombre illisible : ${raw}`);
-  return dec(normalized);
-}
+export { parseNumber };
 
 interface ReadOptions {
   required: boolean;

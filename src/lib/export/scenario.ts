@@ -1,10 +1,10 @@
 /**
  * Export d'un scénario (D-008) : CSV pour tableur, texte copiable, lien de partage.
  */
-import { D, type Dec } from '../core/money';
-import { amountToInvest } from '../core/renfort';
+import { D, type Dec } from 'commun-crypto/money';
+import { amountToInvest } from 'commun-crypto/renfort';
 import { defaultForm, type Form, type Result } from '../core/calc';
-import { eur, eurPrice, pct, qty } from '../core/format';
+import { eur, eurPrice, pct, qty } from 'commun-crypto/format';
 
 // ---------- CSV (dca D-015 : « ; », virgule décimale, BOM) ----------
 

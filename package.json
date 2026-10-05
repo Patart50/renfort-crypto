@@ -1,7 +1,7 @@
 {
   "name": "renfort-crypto",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@fontsource-variable/public-sans": "^5.3.0",
     "@fontsource-variable/source-serif-4": "^5.3.0",
+    "commun-crypto": "git+https://github.com/Patart50/commun-crypto.git#v1.0.0",
     "decimal.js": "^10.6.0",
     "qrcode": "^1.5.4"
   }
