@@ -37,3 +37,18 @@ Valeur d'une position = quantité × cours × (1 − frais de vente). La plus-va
 
 ## D-011 ✅ Code repris par copie
 Depuis dca-crypto (commit `9414232`), qui les tient lui-même de pmpa-crypto : `money.ts`, thème (`app.css`, `ThemeToggle.svelte`), plugin de service worker, polices, stockage local. `support.ts` et son test tels quels (pmpa `37e9dc9`) ; `Support.svelte` repris de dca, correctif de l'espace parasite compris, texte d'introduction adapté. Origine notée en tête de chaque fichier.
+
+## D-012 ✅ Calcul en direct, champs vides sans message d'erreur
+Pas de bouton « Calculer » : le résultat se met à jour à chaque saisie (`parseForm` puis `compute`, `src/lib/core/calc.ts`). Un champ vide n'est pas affiché en erreur : la liste « Reste à renseigner » le rappelle tant que le calcul est impossible. Seules les valeurs illisibles ou hors limites sont signalées sous le champ. Nombres acceptés à la française ou à l'anglaise (« 100 000 », « 1.234,56 », « 1,234.56 », « 0,1 % ») ; avec un seul séparateur, il est décimal.
+
+## D-013 ✅ Prix du jour : la crypto n'est pas envoyée à Binance
+Précise D-004 : l'outil télécharge la liste publique de tous les cours (`/api/v3/ticker/price`, sans paramètre) et cherche la crypto dans la réponse. Binance ne voit que l'adresse IP. L'encart de consentement le dit avant le premier appel ; « Saisir à la main » le referme sans rien envoyer ; l'autorisation se retire d'un clic sous le formulaire. Cours arrondi comme pmpa D-030, chemin de conversion affiché sous le champ, effacé dès que l'utilisateur modifie le prix ou la crypto.
+
+## D-014 ✅ Ouverture d'un lien de partage
+Un lien `#partage?…` remplace le scénario gardé sur l'appareil, avec un bandeau qui le signale. Le fragment est retiré de la barre d'adresse dès la lecture (il contient la position) ; il n'est jamais envoyé au serveur. Valeurs lues comme du texte, champs inconnus ignorés, 40 caractères au plus par champ. Le lien affiché est effacé dès que le formulaire change, pour ne pas partager un scénario périmé.
+
+## D-015 ✅ Graphique du mode « Investir un montant »
+Complète D-007 : en mode montant, la courbe montre le nouveau prix moyen selon le prix d'achat (de 40 % à 130 % du prix actuel), avec le prix moyen actuel en référence et le prix actuel en repère vertical. Axe resserré sur les données (un axe depuis zéro écrasait la courbe) ; en mode cible, l'axe des montants part de zéro.
+
+## D-016 ✅ Exposition au prix actuel
+Le bloc exposition (D-006) et la plus-value latente « après » sont évalués au prix actuel, même quand un prix d'achat plus bas est saisi (ordre limite) : on compare ce que vaudrait la position aujourd'hui, pas au moment hypothétique de l'achat. La baisse de 20 % part aussi du prix actuel.

@@ -1,9 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { app } from './lib/state/app.svelte';
+  import { compute, parseForm, type Field } from './lib/core/calc';
+  import PositionForm from './lib/ui/PositionForm.svelte';
+  import Results from './lib/ui/Results.svelte';
   import ThemeToggle from './lib/ui/ThemeToggle.svelte';
   import Support from './lib/ui/Support.svelte';
   import { AUTHOR } from './lib/support';
+  import { eur, eurPrice } from './lib/core/format';
+  import { amountToInvest } from './lib/core/renfort';
 
   onMount(() => app.init());
 
@@ -11,6 +16,39 @@
     const theme = app.settings.theme;
     if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', theme);
+  });
+
+  // Le formulaire est gardé sur l'appareil à chaque modification (D-008).
+  $effect(() => {
+    JSON.stringify(app.form);
+    app.saveForm();
+  });
+
+  const parsed = $derived(parseForm(app.form));
+  const result = $derived(parsed.ok ? compute(parsed.values) : null);
+
+  const LABELS: Record<Field, string> = {
+    asset: 'la crypto',
+    quantity: 'la quantité détenue',
+    pmp: 'votre prix moyen',
+    price: 'le prix actuel',
+    buyFee: "les frais d'achat",
+    sellFee: 'les frais de vente',
+    target: 'le prix moyen visé',
+    budget: 'le montant à investir',
+    buyPrice: "le prix d'achat",
+  };
+
+  // Champs vides : listés dans « Pour commencer » plutôt qu'affichés en erreur.
+  const isEmpty = (f: Field) => app.form[f].trim() === '';
+  const errors = $derived(parsed.ok ? {} : Object.fromEntries(Object.entries(parsed.errors).filter(([f]) => !isEmpty(f as Field))));
+  const missing = $derived(parsed.ok ? [] : (Object.keys(parsed.errors) as Field[]).filter(isEmpty));
+
+  const announce = $derived.by(() => {
+    if (!result) return '';
+    if (result.target?.status === 'ok' && result.buy) return `Montant à investir : ${eur(amountToInvest(result.buy.amount))}.`;
+    if (result.values.mode === 'budget' && result.buy) return `Nouveau prix moyen : ${eurPrice(result.buy.after.pmp)}.`;
+    return result.target?.status === 'unreachable' ? 'Cible inatteignable à ce prix d’achat.' : '';
   });
 </script>
 
@@ -38,20 +76,39 @@
 </header>
 
 <main id="contenu" tabindex="-1">
-  <section class="intro" aria-labelledby="intro-title">
-    <h1 id="intro-title">Combien investir pour ramener votre prix moyen à une cible ?</h1>
-    <p>
-      renfort-crypto répondra à deux questions : quel montant acheter, et à quel prix, pour faire descendre votre prix moyen pondéré (PMP) à la valeur visée ; et à
-      quel prix vendre pour simplement rentrer dans vos frais.
-    </p>
-    <p>
-      Il montrera aussi ce que coûte le renfort en exposition : capital engagé, perte si le cours baisse encore, hausse nécessaire pour revenir à l'équilibre. Tout
-      le calcul se fait dans votre navigateur ; rien n'est envoyé.
-    </p>
+  {#if !app.persistent}
     <p class="notice" role="status">
-      <span><strong>En construction.</strong> Le moteur de calcul est prêt et testé ; l'interface arrive avec la prochaine version.</span>
+      <span><strong>Stockage indisponible.</strong> Ce navigateur bloque le stockage local (navigation privée ?) : le scénario sera perdu à la fermeture.</span>
     </p>
-  </section>
+  {/if}
+  {#if app.fromShare}
+    <p class="notice" role="status">
+      <span><strong>Scénario ouvert depuis un lien de partage.</strong> Il remplace votre dernier scénario sur cet appareil.</span>
+      <button class="btn btn-small btn-quiet" type="button" onclick={() => (app.fromShare = false)} aria-label="Fermer ce message">×</button>
+    </p>
+  {/if}
+
+  <p class="sr-only" aria-live="polite">{announce}</p>
+
+  <div class="layout">
+    <PositionForm {errors} />
+
+    {#if result}
+      <Results {result} />
+    {:else}
+      <section class="start" aria-labelledby="start-title">
+        <h1 id="start-title">Combien investir pour ramener votre prix moyen à une cible ?</h1>
+        <p>
+          Indiquez votre position et votre objectif : l'outil calcule le montant à investir et le prix d'achat à ne pas dépasser, ou votre nouveau prix moyen pour un
+          montant donné, ainsi que votre prix de break-even. Il montre aussi ce que le renfort change à votre exposition.
+        </p>
+        {#if missing.length}
+          <p class="muted">Reste à renseigner : {missing.map((f) => LABELS[f]).join(', ')}.</p>
+        {/if}
+        <p class="muted small">Tout le calcul se fait dans votre navigateur : rien n'est envoyé.</p>
+      </section>
+    {/if}
+  </div>
 </main>
 
 <footer class="foot">
@@ -64,6 +121,10 @@
     Créé par <a href={AUTHOR.url} target="_blank" rel="noopener author">{AUTHOR.name} ({AUTHOR.handle})</a> · <Support />
   </p>
 </footer>
+
+{#if app.toast}
+  <div class="toast" role="status" aria-live="polite">{app.toast}</div>
+{/if}
 
 <style>
   .skip {
@@ -131,15 +192,33 @@
     padding-inline: 0.4rem;
   }
   main {
-    padding-block: 2rem 3rem;
+    padding-block: 1.5rem 3rem;
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
   }
-  .intro {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+  .start {
     display: grid;
     gap: 0.9rem;
-    max-width: 44rem;
+    max-width: 40rem;
+    padding: 0.5rem 0;
   }
-  .intro h1 {
+  .start h1 {
     font-size: 1.7rem;
+  }
+  .small {
+    font-size: 0.85rem;
+  }
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   .foot {
     padding-block: 0 2.5rem;
@@ -152,6 +231,20 @@
   }
   .credit {
     margin-top: 0.4rem;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-pop);
+    font-size: 0.92rem;
+    z-index: 50;
+    max-width: calc(100vw - 2rem);
   }
   @media (max-width: 640px) {
     .tagline,

@@ -7,12 +7,19 @@ Calculateur de renfort crypto, **100 % local**, en français.
 - À quel prix vendre pour simplement rentrer dans mes frais (break-even) ?
 - Et surtout : que change le renfort à mon exposition (capital engagé, perte si le cours baisse encore) ?
 
-**Site : https://patart50.github.io/renfort-crypto/** — en construction : le moteur de calcul est prêt et testé, l'interface arrive avec la version 0.2.
+**Utiliser l'outil : https://patart50.github.io/renfort-crypto/** (rien à installer, fonctionne aussi hors ligne une fois chargé).
+
+## En trois étapes
+
+1. **Votre position** : la crypto, la quantité détenue, votre prix moyen (frais compris), le prix actuel (saisi, ou « Prix du jour » via Binance si vous l'autorisez) et vos frais.
+2. **Votre objectif** : « Atteindre un prix moyen » (le montant à investir et le prix limite) ou « Investir un montant » (votre nouveau prix moyen, et le prix maximum pour atteindre une cible).
+3. **Lire le résultat** : chiffres clés, exposition avant et après, tableau si le cours baisse, graphique. Export CSV, résumé à copier ou lien de partage.
 
 ## Principes
 
 - Aucune donnée ne quitte le navigateur. Pas de compte, pas de serveur.
-- Le prix du jour pourra être récupéré sur l'API publique de Binance **sur demande explicite** (seuls des noms de paires sont envoyés), ou saisi à la main.
+- Le prix du jour peut être récupéré sur l'API publique de Binance **sur demande explicite** : l'outil télécharge la liste publique des cours, sans envoyer la crypto choisie. Sinon, il se saisit à la main.
+- Le lien de partage place les paramètres après le « # » de l'adresse, jamais envoyé au serveur ; il révèle votre position à qui le reçoit.
 - Aucun impôt n'est calculé : un renfort est un achat. Pour la fiscalité, voir [pmpa-crypto](https://github.com/Patart50/pmpa-crypto).
 - Outil d'aide au calcul, pas un conseil en investissement. Baisser son prix moyen ne change pas, à lui seul, le résultat : il dépend du prix futur et de la quantité détenue.
 
