@@ -1,5 +1,9 @@
 # Notes de version
 
+## Non publié
+
+- Aperçu des liens : un lien vers l'outil partagé sur X, Mastodon, Discord ou une messagerie affiche une carte avec titre, description et image (balises Open Graph, image `og.png` 1200×630). Aucun effet sur le fonctionnement ni sur vos données.
+
 ## 1.0.1 — Code commun
 
 - Le code partagé avec les autres outils du programme (calcul décimal, prix Binance, formules, thème, fenêtre de soutien, mode hors ligne) vient désormais du paquet commun-crypto. Aucun changement visible ; scénarios gardés sur l'appareil conservés.
