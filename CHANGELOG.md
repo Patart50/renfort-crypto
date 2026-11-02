@@ -7,7 +7,6 @@
 - Prix du jour en dollars : paire USDC de la crypto, sinon via USDT ou via l'euro.
 - Équivalent dans l'autre devise sous le résultat principal.
 - « $ » accepté dans la saisie des montants.
-
 - Aperçu des liens : un lien vers l'outil partagé sur X, Mastodon, Discord ou une messagerie affiche une carte avec titre, description et image (balises Open Graph, image `og.png` 1200×630). Aucun effet sur le fonctionnement ni sur vos données.
 
 ## 1.0.1 — Code commun
