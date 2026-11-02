@@ -127,3 +127,34 @@ describe('compute', () => {
     );
   });
 });
+
+describe('devise (D-019)', () => {
+  it('euro par défaut, taux facultatif', () => {
+    const v = values({});
+    expect(v.currency).toBe('EUR');
+    expect(v.fx).toBeNull();
+  });
+
+  it('dollar : « $ » accepté dans les montants, calcul identique', () => {
+    const eur = compute(values({}));
+    const usd = compute(values({ currency: 'USD', pmp: '100 000 $', price: '$60 000', target: '80000$', fx: '1,085' }));
+    expect(usd.values.currency).toBe('USD');
+    expect(usd.values.fx!.toString()).toBe('1.085');
+    expect(usd.buy!.amount.toString()).toBe(eur.buy!.amount.toString());
+  });
+
+  it('montants convertis au taux : résultat converti au même taux', () => {
+    const rate = '1.085';
+    const eur = compute(values({}));
+    const usd = compute(values({ currency: 'USD', pmp: '108500', price: '65100', target: '86800' }));
+    expect(usd.buy!.amount.toDecimalPlaces(6).toString()).toBe(eur.buy!.amount.mul(rate).toDecimalPlaces(6).toString());
+    expect(usd.buy!.quantityBought.toDecimalPlaces(12).toString()).toBe(eur.buy!.quantityBought.toDecimalPlaces(12).toString());
+  });
+
+  it('taux invalide signalé', () => {
+    const r = parseForm(form({ fx: '0' }));
+    expect(!r.ok && r.errors.fx).toMatch(/supérieur à zéro/);
+    const r2 = parseForm(form({ fx: 'abc' }));
+    expect(!r2.ok && r2.errors.fx).toMatch(/invalide/);
+  });
+});

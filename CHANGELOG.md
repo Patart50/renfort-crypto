@@ -1,6 +1,12 @@
 # Notes de version
 
-## Non publié
+## 1.1.0 — Euros ou dollars
+
+- Devise au choix pour tout le scénario : euro ou dollar (USDC, comme sur Binance). Libellés, résultats, graphique, CSV, résumé et lien de partage suivent la devise.
+- Taux EUR/USDC : saisi, ou « Taux du jour » (paire spot EURUSDC sur Binance, même autorisation que le prix du jour). Changer de devise convertit vos prix et votre montant à ce taux ; sans taux, l'outil vous demande quoi faire.
+- Prix du jour en dollars : paire USDC de la crypto, sinon via USDT ou via l'euro.
+- Équivalent dans l'autre devise sous le résultat principal.
+- « $ » accepté dans la saisie des montants.
 
 - Aperçu des liens : un lien vers l'outil partagé sur X, Mastodon, Discord ou une messagerie affiche une carte avec titre, description et image (balises Open Graph, image `og.png` 1200×630). Aucun effet sur le fonctionnement ni sur vos données.
 

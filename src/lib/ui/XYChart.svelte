@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
   import type { ChartData } from '../core/calc';
-  import { eurPrice, eurRound } from 'commun-crypto/format';
+  import { formatter, type Fmt } from '../core/currency';
   import { dec } from 'commun-crypto/money';
 
   interface Props {
@@ -17,8 +17,10 @@
     xLabel: string;
     /** Axe vertical depuis zéro (montants) ; sinon resserré sur les données (prix moyen). */
     zeroBased?: boolean;
+    /** Formatage des montants dans la devise du scénario. */
+    fmt?: Fmt;
   }
-  let { title, summary, data, xLabel, zeroBased = true }: Props = $props();
+  let { title, summary, data, xLabel, zeroBased = true, fmt = formatter('EUR') }: Props = $props();
 
   let width = $state(640);
   let active = $state<number | null>(null);
@@ -87,8 +89,8 @@
   const ref = $derived(data.reference ? { y: y(data.reference.y.toNumber()), label: data.reference.label } : null);
   const vert = $derived(data.vertical ? { x: x(data.vertical.x.toNumber()), label: data.vertical.label } : null);
 
-  const fmtY = (v: number) => eurRound(dec(v));
-  const fmtX = (v: number) => eurRound(dec(v));
+  const fmtY = (v: number) => fmt.round(dec(v));
+  const fmtX = (v: number) => fmt.round(dec(v));
 
   function nearest(px: number): number {
     let best = 0;
@@ -121,7 +123,7 @@
     if (active === null || active >= n) return null;
     const p = pts[active];
     const left = x(p.x);
-    return { left, top: y(p.y), alignRight: left > m.left + plotW * 0.6, x: eurPrice(p.xd), y: eurPrice(p.yd) };
+    return { left, top: y(p.y), alignRight: left > m.left + plotW * 0.6, x: fmt.price(p.xd), y: fmt.price(p.yd) };
   });
   const announce = $derived(tip ? `${xLabel} ${tip.x} : ${data.yLabel.toLowerCase()} ${tip.y}` : '');
 </script>
