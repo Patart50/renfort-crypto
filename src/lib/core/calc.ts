@@ -4,6 +4,7 @@
  */
 import { D, dec, type Dec } from 'commun-crypto/money';
 import { parseNumber } from 'commun-crypto/parse';
+import { readAmount, type Currency } from './currency';
 import {
   amountForTarget,
   budgetScenarios,
@@ -40,12 +41,29 @@ export interface Form {
   budget: string;
   /** Vide : prix actuel. */
   buyPrice: string;
+  /** Devise de tous les montants du scénario (D-019). */
+  currency: Currency;
+  /** Taux EUR/USDC : USDC pour 1 €. Facultatif. */
+  fx: string;
 }
 
-export type Field = keyof Omit<Form, 'mode'>;
+export type Field = keyof Omit<Form, 'mode' | 'currency'>;
 
 export function defaultForm(): Form {
-  return { asset: 'BTC', quantity: '', pmp: '', price: '', buyFee: '0,1', sellFee: '0,1', mode: 'target', target: '', budget: '', buyPrice: '' };
+  return {
+    asset: 'BTC',
+    quantity: '',
+    pmp: '',
+    price: '',
+    buyFee: '0,1',
+    sellFee: '0,1',
+    mode: 'target',
+    target: '',
+    budget: '',
+    buyPrice: '',
+    currency: 'EUR',
+    fx: '',
+  };
 }
 
 export interface Values {
@@ -61,6 +79,9 @@ export interface Values {
   buyPrice: Dec;
   /** Prix d'achat saisi (sinon prix actuel). */
   buyPriceGiven: boolean;
+  currency: Currency;
+  /** Taux EUR/USDC, s'il est saisi : sert à afficher l'équivalent dans l'autre devise. */
+  fx: Dec | null;
 }
 
 export type ParseResult = { ok: true; values: Values } | { ok: false; errors: Partial<Record<Field, string>> };
@@ -80,7 +101,7 @@ export function parseForm(form: Form): ParseResult {
   const read = (field: Field, label: string, opts: ReadOptions): Dec | null => {
     let v: Dec | null;
     try {
-      v = parseNumber(form[field]);
+      v = readAmount(form[field]);
     } catch {
       errors[field] = `${label} : nombre invalide.`;
       return null;
@@ -106,6 +127,7 @@ export function parseForm(form: Form): ParseResult {
   const buyFee = read('buyFee', "Frais d'achat", { required: false, percent: true });
   const sellFee = read('sellFee', 'Frais de vente', { required: false, percent: true });
   const buyPrice = read('buyPrice', "Prix d'achat", { required: false, positive: true });
+  const fx = read('fx', 'Taux EUR/USDC', { required: false, positive: true });
 
   let target: Dec | null = null;
   let budget: Dec | null = null;
@@ -133,6 +155,8 @@ export function parseForm(form: Form): ParseResult {
       budget,
       buyPrice: buyPrice ?? price!,
       buyPriceGiven: buyPrice !== null,
+      currency: form.currency,
+      fx,
     },
   };
 }

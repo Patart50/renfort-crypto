@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PositionSummary, Result } from '../core/calc';
-  import { eur, eurPrice, eurSigned, pct, qty } from 'commun-crypto/format';
+  import { pct, qty } from 'commun-crypto/format';
+  import { convert, formatter, rateText } from '../core/currency';
+  import type { Dec } from 'commun-crypto/money';
   import { amountToInvest } from 'commun-crypto/renfort';
   import { targetStatusText } from '../export/scenario';
   import XYChart from './XYChart.svelte';
@@ -12,6 +14,16 @@
   let { result }: Props = $props();
 
   const v = $derived(result.values);
+  const f = $derived(formatter(result.values.currency));
+  const other = $derived(result.values.currency === 'EUR' ? 'USD' : 'EUR');
+  /** Équivalent dans l'autre devise, si un taux est saisi (D-019). */
+  function alt(d: Dec, kind: 'invest' | 'price'): string | null {
+    const rate = v.fx;
+    if (!rate) return null;
+    const c = convert(d, v.currency, other, rate);
+    // Montant à investir : arrondi au centime supérieur, comme dans la devise du scénario (D-009).
+    return kind === 'price' ? formatter(other).price(c) : formatter(other).money(amountToInvest(c));
+  }
   const a = $derived(v.asset || 'crypto');
   const holds = $derived(v.position.quantity.gt(0));
   const t = $derived(result.target);
@@ -31,7 +43,7 @@
     if (!holds || !result.after) return '';
     const extra = result.after.cost.minus(result.before.cost);
     const share = extra.div(result.before.cost).mul(100);
-    return `Ce renfort augmente votre capital engagé de ${eur(extra)} (${pct(share)}). Si le cours baisse encore de 20 %, votre résultat passe de ${eurSigned(result.before.exposure.gainAfterShock)} à ${eurSigned(result.after.exposure.gainAfterShock)}.`;
+    return `Ce renfort augmente votre capital engagé de ${f.money(extra)} (${pct(share)}). Si le cours baisse encore de 20 %, votre résultat passe de ${f.signed(result.before.exposure.gainAfterShock)} à ${f.signed(result.after.exposure.gainAfterShock)}.`;
   });
 
   const chartSummary = $derived.by(() => {
@@ -39,11 +51,11 @@
       if (!result.chart.points.length) return 'Aucune courbe : la cible est déjà atteinte.';
       const first = result.chart.points[0];
       const last = result.chart.points.at(-1)!;
-      return `Montant à investir selon le prix d'achat : ${eur(first.y)} à ${eurPrice(first.x)}, ${eur(last.y)} à ${eurPrice(last.x)}. Il tend vers l'infini à l'approche du prix limite.`;
+      return `Montant à investir selon le prix d'achat : ${f.money(first.y)} à ${f.price(first.x)}, ${f.money(last.y)} à ${f.price(last.x)}. Il tend vers l'infini à l'approche du prix limite.`;
     }
     const first = result.chart.points[0];
     const last = result.chart.points.at(-1)!;
-    return `Nouveau prix moyen selon le prix d'achat : ${eurPrice(first.y)} à ${eurPrice(first.x)}, ${eurPrice(last.y)} à ${eurPrice(last.x)}.`;
+    return `Nouveau prix moyen selon le prix d'achat : ${f.price(first.y)} à ${f.price(first.x)}, ${f.price(last.y)} à ${f.price(last.x)}.`;
   });
 
   const dropLabel = (d: Result['targetRows'][number]['drop']) => (d.isZero() ? 'Prix actuel' : `−${pct(d.mul(100)).replace('+', '')}`);
@@ -56,13 +68,14 @@
     {#if v.mode === 'target'}
       {#if t?.status === 'ok' && b}
         <p class="lead">
-          Pour ramener votre prix moyen à <strong class="num">{eurPrice(v.target!)}</strong> en achetant à <strong class="num">{eurPrice(v.buyPrice)}</strong> :
+          Pour ramener votre prix moyen à <strong class="num">{f.price(v.target!)}</strong> en achetant à <strong class="num">{f.price(v.buyPrice)}</strong> :
         </p>
         <dl class="figures">
           <div class="main">
             <dt>Montant à investir</dt>
-            <dd class="num">{eur(amountToInvest(b.amount))}</dd>
-            <dd class="sub">frais compris ({eur(b.fees)} de frais)</dd>
+            <dd class="num">{f.money(amountToInvest(b.amount))}</dd>
+            <dd class="sub">frais compris ({f.money(b.fees)} de frais)</dd>
+            {#if alt(b.amount, 'invest')}<dd class="sub">soit {alt(b.amount, 'invest')} au taux {rateText(v.fx!)}</dd>{/if}
           </div>
           <div>
             <dt>Quantité à acheter</dt>
@@ -74,11 +87,11 @@
           </div>
           <div>
             <dt>Nouveau break-even</dt>
-            <dd class="num">{eurPrice(result.after!.breakEven)}</dd>
+            <dd class="num">{f.price(result.after!.breakEven)}</dd>
           </div>
         </dl>
         <p class="note">
-          Prix limite : <strong class="num">{eurPrice(t.limitPrice)}</strong>. Plus votre prix d'achat s'en approche, plus le montant nécessaire grimpe ; à ce prix ou
+          Prix limite : <strong class="num">{f.price(t.limitPrice)}</strong>. Plus votre prix d'achat s'en approche, plus le montant nécessaire grimpe ; à ce prix ou
           au-dessus, la cible est inatteignable.
         </p>
       {:else if t}
@@ -89,13 +102,14 @@
       {/if}
     {:else if b}
       <p class="lead">
-        En investissant <strong class="num">{eur(v.budget!)}</strong> à <strong class="num">{eurPrice(v.buyPrice)}</strong> :
+        En investissant <strong class="num">{f.money(v.budget!)}</strong> à <strong class="num">{f.price(v.buyPrice)}</strong> :
       </p>
       <dl class="figures">
         <div class="main">
           <dt>{holds ? 'Nouveau prix moyen' : 'Prix moyen de cet achat'}</dt>
-          <dd class="num">{eurPrice(b.after.pmp)}</dd>
-          {#if holds}<dd class="sub">contre {eurPrice(v.position.pmp)} aujourd'hui</dd>{/if}
+          <dd class="num">{f.price(b.after.pmp)}</dd>
+          {#if holds}<dd class="sub">contre {f.price(v.position.pmp)} aujourd'hui</dd>{/if}
+          {#if alt(b.after.pmp, 'price')}<dd class="sub">soit {alt(b.after.pmp, 'price')} au taux {rateText(v.fx!)}</dd>{/if}
         </div>
         <div>
           <dt>Quantité achetée</dt>
@@ -107,7 +121,7 @@
         </div>
         <div>
           <dt>Nouveau break-even</dt>
-          <dd class="num">{eurPrice(result.after!.breakEven)}</dd>
+          <dd class="num">{f.price(result.after!.breakEven)}</dd>
         </div>
       </dl>
       {#if b.raisesPmp}
@@ -116,8 +130,8 @@
       {#if result.maxPrice}
         <p class="note">
           {#if result.maxPrice.status === 'ok'}
-            Pour atteindre un prix moyen de <strong class="num">{eurPrice(v.target!)}</strong> avec ce montant, il faut acheter à
-            <strong class="num">{eurPrice(result.maxPrice.price)}</strong> au plus.
+            Pour atteindre un prix moyen de <strong class="num">{f.price(v.target!)}</strong> avec ce montant, il faut acheter à
+            <strong class="num">{f.price(result.maxPrice.price)}</strong> au plus.
           {:else if result.maxPrice.status === 'reached'}
             Votre prix moyen est déjà au niveau visé ou en dessous.
           {:else}
@@ -136,7 +150,7 @@
     {#if sides.length}
       <div class="table-wrap">
         <table>
-          <caption class="sr-only">Exposition {sides.length > 1 ? 'avant et après le renfort' : ''}, au prix actuel de {eurPrice(v.price)}</caption>
+          <caption class="sr-only">Exposition {sides.length > 1 ? 'avant et après le renfort' : ''}, au prix actuel de {f.price(v.price)}</caption>
           <thead>
             <tr>
               <th scope="col"><span class="sr-only">Indicateur</span></th>
@@ -145,16 +159,16 @@
           </thead>
           <tbody>
             <tr><th scope="row">Quantité</th>{#each sides as side (side.label)}<td class="num">{qty(side.s.position.quantity)} {a}</td>{/each}</tr>
-            <tr><th scope="row">Capital engagé</th>{#each sides as side (side.label)}<td class="num">{eur(side.s.cost)}</td>{/each}</tr>
-            <tr><th scope="row">Plus-value latente au prix actuel</th>{#each sides as side (side.label)}<td class="num" class:gain={side.s.latent.gt(0)} class:loss={side.s.latent.lt(0)}>{eurSigned(side.s.latent)}</td>{/each}</tr>
-            <tr><th scope="row">Si le cours baisse encore de 20 %</th>{#each sides as side (side.label)}<td class="num" class:loss={side.s.exposure.gainAfterShock.lt(0)} class:gain={side.s.exposure.gainAfterShock.gt(0)}>{eurSigned(side.s.exposure.gainAfterShock)}</td>{/each}</tr>
-            <tr><th scope="row">Prix de break-even</th>{#each sides as side (side.label)}<td class="num">{eurPrice(side.s.breakEven)}</td>{/each}</tr>
+            <tr><th scope="row">Capital engagé</th>{#each sides as side (side.label)}<td class="num">{f.money(side.s.cost)}</td>{/each}</tr>
+            <tr><th scope="row">Plus-value latente au prix actuel</th>{#each sides as side (side.label)}<td class="num" class:gain={side.s.latent.gt(0)} class:loss={side.s.latent.lt(0)}>{f.signed(side.s.latent)}</td>{/each}</tr>
+            <tr><th scope="row">Si le cours baisse encore de 20 %</th>{#each sides as side (side.label)}<td class="num" class:loss={side.s.exposure.gainAfterShock.lt(0)} class:gain={side.s.exposure.gainAfterShock.gt(0)}>{f.signed(side.s.exposure.gainAfterShock)}</td>{/each}</tr>
+            <tr><th scope="row">Prix de break-even</th>{#each sides as side (side.label)}<td class="num">{f.price(side.s.breakEven)}</td>{/each}</tr>
             <tr><th scope="row">Hausse nécessaire pour y revenir</th>{#each sides as side (side.label)}<td class="num">{rise(side.s)}</td>{/each}</tr>
           </tbody>
         </table>
       </div>
       {#if exposureSentence}<p class="note">{exposureSentence}</p>{/if}
-      <p class="fine muted">Valeurs nettes des frais de vente, au prix actuel de {eurPrice(v.price)}.</p>
+      <p class="fine muted">Valeurs nettes des frais de vente, au prix actuel de {f.price(v.price)}.</p>
     {:else}
       <p class="note">Aucun achat dans ce scénario : votre exposition reste celle d'aujourd'hui.</p>
     {/if}
@@ -164,8 +178,8 @@
     <h2 id="sc-title">Si le cours baisse</h2>
     <p class="intro">
       {v.mode === 'target'
-        ? `Montant à investir pour atteindre un prix moyen de ${eurPrice(v.target!)}, selon le prix auquel vous achetez.`
-        : `Effet d'un achat de ${eur(v.budget!)} selon le prix auquel vous achetez.`}
+        ? `Montant à investir pour atteindre un prix moyen de ${f.price(v.target!)}, selon le prix auquel vous achetez.`
+        : `Effet d'un achat de ${f.money(v.budget!)} selon le prix auquel vous achetez.`}
     </p>
     <!-- Tableau défilable sur mobile : la région doit être atteignable au clavier (WCAG, règle axe scrollable-region-focusable). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -184,11 +198,11 @@
             {#each result.targetRows as row (row.drop.toString())}
               <tr>
                 <th scope="row" class="drop">{dropLabel(row.drop)}</th>
-                <td class="num">{eurPrice(row.price)}</td>
+                <td class="num">{f.price(row.price)}</td>
                 {#if row.result.status === 'ok'}
-                  <td class="num"><strong>{eur(amountToInvest(row.result.amount))}</strong></td>
+                  <td class="num"><strong>{f.money(amountToInvest(row.result.amount))}</strong></td>
                   <td class="num">{qty(row.result.buy.quantityBought)}</td>
-                  <td class="num">{eur(row.result.buy.after.quantity.mul(row.result.buy.after.pmp))}</td>
+                  <td class="num">{f.money(row.result.buy.after.quantity.mul(row.result.buy.after.pmp))}</td>
                 {:else}
                   <td class="impossible" colspan="3">{row.result.status === 'unreachable' ? 'Inatteignable à ce prix' : 'Déjà atteint'}</td>
                 {/if}
@@ -198,10 +212,10 @@
             {#each result.budgetRows as row (row.drop.toString())}
               <tr>
                 <th scope="row" class="drop">{dropLabel(row.drop)}</th>
-                <td class="num">{eurPrice(row.price)}</td>
+                <td class="num">{f.price(row.price)}</td>
                 <td class="num">{qty(row.result.quantityBought)}</td>
-                <td class="num"><strong>{eurPrice(row.result.after.pmp)}</strong></td>
-                <td class="num">{eur(row.result.after.quantity.mul(row.result.after.pmp))}</td>
+                <td class="num"><strong>{f.price(row.result.after.pmp)}</strong></td>
+                <td class="num">{f.money(row.result.after.quantity.mul(row.result.after.pmp))}</td>
               </tr>
             {/each}
           {/if}
@@ -217,6 +231,7 @@
       data={result.chart}
       xLabel="Prix d'achat"
       zeroBased={v.mode === 'target'}
+      fmt={f}
     />
   {/if}
 

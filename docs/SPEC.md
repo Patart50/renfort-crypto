@@ -1,4 +1,4 @@
-# Spécification — renfort-crypto v1.0
+# Spécification — renfort-crypto v1.1
 
 Calculateur de renfort et de break-even, 100 % local, en français. Projet frère de [pmpa-crypto](https://github.com/Patart50/pmpa-crypto) et [dca-crypto](https://github.com/Patart50/dca-crypto). Toute convention de calcul est consignée dans [DECISIONS.md](DECISIONS.md).
 
@@ -15,7 +15,9 @@ Et montrer, sans jugement, ce que le renfort change à l'exposition (D-006). L'o
 | Champ | Détail |
 |---|---|
 | Quantité détenue | > 0 (sans position, seul le mode « montant » a un sens : premier achat) |
-| PMP actuel | En euros, frais d'achat inclus (D-002) |
+| Devise | Euro ou dollar (USDC), pour tous les montants du scénario (D-019) |
+| Taux EUR/USDC | Facultatif : saisi, ou paire spot EURUSDC sur Binance en opt-in (D-019) |
+| PMP actuel | Dans la devise choisie, frais d'achat inclus (D-002) |
 | Prix actuel | Saisi, ou récupéré sur Binance en opt-in (D-004) |
 | Frais d'achat, frais de vente | En %, dans [0, 100[ |
 | Mode « atteindre un PMP » | PMP cible Y ; prix d'achat (par défaut : prix actuel) |
@@ -57,7 +59,7 @@ Code : `src/lib/core/calc.ts`.
 
 Une page, deux colonnes sur grand écran (formulaire à gauche, résultats à droite), une seule en dessous de 900 px. État : `src/lib/state/app.svelte.ts`.
 
-- **Votre position** (`PositionForm.svelte`) : crypto, quantité, prix moyen, prix actuel avec « Prix du jour » (Binance, consentement D-013), frais d'achat et de vente. **Votre objectif** : bascule « Atteindre un prix moyen » / « Investir un montant » (groupe radio, flèches au clavier), champs du mode, prix d'achat. « Effacer le formulaire ».
+- **Votre position** (`PositionForm.svelte`) : devise (€ / $, groupe radio ; conversion des montants ou choix explicite sans taux, D-019), taux EUR/USDC avec « Taux du jour », crypto, quantité, prix moyen, prix actuel avec « Prix du jour » (Binance, consentement D-013), frais d'achat et de vente. **Votre objectif** : bascule « Atteindre un prix moyen » / « Investir un montant » (groupe radio, flèches au clavier), champs du mode, prix d'achat. « Effacer le formulaire ».
 - **Résultat** (`Results.svelte`) : chiffre principal (montant à investir ou nouveau prix moyen), quantité achetée, nouvelle quantité, nouveau break-even ; prix limite ; prix maximum avec un budget ; messages pour cible atteinte, inatteignable, achat au-dessus du prix moyen.
 - **Exposition** (D-006) : tableau avant / après (quantité, capital engagé, plus-value latente, résultat si −20 %, break-even, hausse nécessaire) et phrase de synthèse.
 - **Si le cours baisse** (D-004) : tableau des scénarios, cases impossibles en clair.
@@ -73,6 +75,7 @@ Principes communs : thème auto / clair / sombre, hors ligne (service worker), 3
 ## 6. Prix et export
 
 - **Binance** (`commun-crypto/binance`, D-004, D-013, D-018) : `loadTicker` (deux hôtes, erreur claire), `priceEur` (paire EUR, puis USDT, USDC, BTC), `roundPrice`.
+- **Devise** (`src/lib/core/currency.ts`, D-019) : `formatter` (€ / $), `convert`, `convertAmounts`, `eurUsdcRate` (EURUSDC), `priceUsdc` (XUSDC, XUSDT ÷ USDCUSDT, prix en euros × EURUSDC), `readAmount` (« $ » accepté).
 - **Export** (`src/lib/export/scenario.ts`, D-008) : `scenarioCsv` (« ; », virgule décimale, BOM : paramètres, résultat, exposition, scénarios), `scenarioText`, `shareFragment` / `readShareFragment`.
 
 ## 7. Jalons
@@ -80,6 +83,7 @@ Principes communs : thème auto / clair / sombre, hors ligne (service worker), 3
 - **J1** ✅ Spec, décisions, squelette, moteur de calcul testé, CI et déploiement (page d'attente).
 - **J2** ✅ Interface complète : saisie, deux modes, résultats, exposition, scénarios, graphique, prix Binance, sauvegarde, export, partage.
 - **J3** ✅ v1.0 : page « À propos et limites », hors ligne vérifié, accessibilité (D-017).
+- **v1.1** Montants en euros ou en dollars (USDC), taux EUR/USDC de Binance (D-019).
 
 ## 8. Hors périmètre v1.0
 

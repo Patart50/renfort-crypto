@@ -1,6 +1,7 @@
 <script lang="ts">
   import { app } from '../state/app.svelte';
   import type { Field } from '../core/calc';
+  import { CURRENCIES, SYMBOL, type Currency } from '../core/currency';
 
   interface Props {
     /** Erreurs de format à afficher (les champs simplement vides n'en font pas partie). */
@@ -9,11 +10,21 @@
   let { errors }: Props = $props();
 
   const asset = $derived(app.form.asset.trim().toUpperCase() || 'crypto');
+  const sym = $derived(SYMBOL[app.form.currency]);
+  const CURRENCY_LABEL: Record<Currency, string> = { EUR: '€ euro', USD: '$ dollar (USDC)' };
   const err = (f: Field) => errors[f];
   const describedBy = (f: Field, hint?: string) => [hint, errors[f] ? `${f}-err` : ''].filter(Boolean).join(' ') || undefined;
 
   function setMode(mode: 'target' | 'budget') {
     app.form.mode = mode;
+  }
+
+  function onCurrencyKey(e: KeyboardEvent) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    const next: Currency = app.form.currency === 'EUR' ? 'USD' : 'EUR';
+    app.setCurrency(next);
+    document.getElementById(`cur-${next}`)?.focus();
   }
 
   function onModeKey(e: KeyboardEvent) {
@@ -25,10 +36,83 @@
   }
 </script>
 
+{#snippet consent(what: string)}
+  <div class="consent wide" role="group" aria-labelledby="consent-title">
+    <p id="consent-title"><strong>Récupérer {what} sur Binance ?</strong></p>
+    <p>
+      L'outil demandera à l'API publique de Binance la liste de tous les cours. Rien d'autre n'est envoyé : ni la crypto choisie, ni quantité, ni montant. Votre adresse IP
+      est visible de Binance, comme pour toute page web. Ce choix est mémorisé sur cet appareil.
+    </p>
+    <div class="actions">
+      <button class="btn btn-primary btn-small" type="button" onclick={() => app.acceptAndFetch()}>Autoriser et récupérer</button>
+      <button class="btn btn-small" type="button" onclick={() => app.cancelConsent()}>Saisir à la main</button>
+    </div>
+  </div>
+{/snippet}
+
 <form class="panel params" aria-labelledby="pos-title" onsubmit={(e) => e.preventDefault()} novalidate>
   <fieldset>
     <legend id="pos-title"><h2>Votre position</h2></legend>
     <div class="grid">
+      <div class="field wide">
+        <span class="label" id="cur-label">Devise des montants</span>
+        <div class="modes" role="radiogroup" aria-labelledby="cur-label">
+          {#each CURRENCIES as c (c)}
+            <button
+              id={`cur-${c}`}
+              type="button"
+              role="radio"
+              aria-checked={app.form.currency === c}
+              tabindex={app.form.currency === c ? 0 : -1}
+              onclick={() => app.setCurrency(c)}
+              onkeydown={onCurrencyKey}>{CURRENCY_LABEL[c]}</button
+            >
+          {/each}
+        </div>
+      </div>
+
+      {#if app.currencyPrompt}
+        {@const to = SYMBOL[app.currencyPrompt]}
+        <div class="consent wide" role="group" aria-labelledby="switch-title">
+          <p id="switch-title"><strong>Convertir vos montants en {to} ?</strong></p>
+          <p>Il faut le taux EUR/USDC : récupérez-le sur Binance, ou saisissez-le ci-dessous puis choisissez à nouveau la devise.</p>
+          <div class="actions">
+            <button class="btn btn-primary btn-small" type="button" onclick={() => app.requestRate(app.currencyPrompt)} disabled={app.rateStatus === 'loading'}
+              >Taux du jour et convertir</button
+            >
+            <button class="btn btn-small" type="button" onclick={() => app.switchWithoutConverting()}>Mes montants sont déjà en {to}</button>
+            <button class="btn btn-small btn-quiet" type="button" onclick={() => app.cancelCurrencyPrompt()}>Annuler</button>
+          </div>
+        </div>
+      {/if}
+
+      <div class="field wide">
+        <label for="fx"><span class="label">Taux EUR/USDC (facultatif)</span></label>
+        <div class="with-btn">
+          <span class="prefix" aria-hidden="true">1 € =</span>
+          <input
+            id="fx"
+            bind:value={app.form.fx}
+            oninput={() => (app.rateFromBinance = false)}
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="1,08"
+            aria-invalid={!!err('fx')}
+            aria-describedby={describedBy('fx', 'fx-hint')}
+          />
+          <span class="suffix" aria-hidden="true">$</span>
+          <button class="btn btn-small" type="button" onclick={() => app.requestRate()} disabled={app.rateStatus === 'loading'}>
+            {app.rateStatus === 'loading' ? 'Chargement…' : 'Taux du jour'}
+          </button>
+        </div>
+        <small id="fx-hint">
+          {#if app.rateFromBinance}Cours spot Binance (EURUSDC), modifiable.{:else}Dollars (USDC) pour 1 €. Sert à convertir vos montants et à afficher l'équivalent.{/if}
+        </small>
+        {#if err('fx')}<small id="fx-err" class="error">{err('fx')}</small>{/if}
+        {#if app.rateStatus === 'error' && app.rateMessage}<small class="error" role="alert">{app.rateMessage}</small>{/if}
+      </div>
+      {#if app.consentFor === 'rate'}{@render consent('le taux EUR/USDC')}{/if}
+
       <label class="field">
         <span>Crypto</span>
         <input
@@ -50,13 +134,13 @@
         {#if err('quantity')}<small id="quantity-err" class="error">{err('quantity')}</small>{/if}
       </label>
       <label class="field">
-        <span>Prix moyen actuel (€)</span>
+        <span>Prix moyen actuel ({sym})</span>
         <input bind:value={app.form.pmp} inputmode="decimal" autocomplete="off" placeholder="100 000" aria-invalid={!!err('pmp')} aria-describedby={describedBy('pmp', 'pmp-hint')} />
         <small id="pmp-hint">Frais d'achat inclus, comme dans pmpa-crypto.</small>
         {#if err('pmp')}<small id="pmp-err" class="error">{err('pmp')}</small>{/if}
       </label>
       <div class="field wide">
-        <label for="price"><span class="label">Prix actuel (€)</span></label>
+        <label for="price"><span class="label">Prix actuel ({sym})</span></label>
         <div class="with-btn">
           <input
             id="price"
@@ -79,19 +163,7 @@
         {#if app.priceStatus === 'error' && app.priceMessage}<small class="error" role="alert">{app.priceMessage}</small>{/if}
       </div>
 
-      {#if app.priceStatus === 'consent'}
-        <div class="consent wide" role="group" aria-labelledby="consent-title">
-          <p id="consent-title"><strong>Récupérer le prix de {asset} sur Binance ?</strong></p>
-          <p>
-            L'outil demandera à l'API publique de Binance la liste de tous les cours. Rien d'autre n'est envoyé : ni la crypto choisie, ni quantité, ni montant. Votre adresse
-            IP est visible de Binance, comme pour toute page web. Ce choix est mémorisé sur cet appareil.
-          </p>
-          <div class="actions">
-            <button class="btn btn-primary btn-small" type="button" onclick={() => app.acceptAndFetch()}>Autoriser et récupérer</button>
-            <button class="btn btn-small" type="button" onclick={() => app.cancelConsent()}>Saisir à la main</button>
-          </div>
-        </div>
-      {/if}
+      {#if app.consentFor === 'price'}{@render consent(`le prix de ${asset}`)}{/if}
 
       <label class="field">
         <span>Frais d'achat (%)</span>
@@ -131,20 +203,20 @@
     <div class="grid">
       {#if app.form.mode === 'budget'}
         <label class="field">
-          <span>Montant à investir (€)</span>
+          <span>Montant à investir ({sym})</span>
           <input bind:value={app.form.budget} inputmode="decimal" autocomplete="off" placeholder="2 000" aria-invalid={!!err('budget')} aria-describedby={describedBy('budget', 'budget-hint')} />
           <small id="budget-hint">Frais compris.</small>
           {#if err('budget')}<small id="budget-err" class="error">{err('budget')}</small>{/if}
         </label>
       {/if}
       <label class="field">
-        <span>Prix moyen visé (€){app.form.mode === 'budget' ? ' — facultatif' : ''}</span>
+        <span>Prix moyen visé ({sym}){app.form.mode === 'budget' ? ' — facultatif' : ''}</span>
         <input bind:value={app.form.target} inputmode="decimal" autocomplete="off" placeholder="80 000" aria-invalid={!!err('target')} aria-describedby={describedBy('target', app.form.mode === 'budget' ? 'target-hint' : undefined)} />
         {#if app.form.mode === 'budget'}<small id="target-hint">Donne le prix d'achat maximum pour l'atteindre avec ce montant.</small>{/if}
         {#if err('target')}<small id="target-err" class="error">{err('target')}</small>{/if}
       </label>
       <label class="field">
-        <span>Prix d'achat (€)</span>
+        <span>Prix d'achat ({sym})</span>
         <input
           bind:value={app.form.buyPrice}
           inputmode="decimal"
@@ -205,6 +277,13 @@
   }
   .with-btn input {
     flex: 1;
+  }
+  .prefix,
+  .suffix {
+    align-self: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
   }
   .consent {
     display: grid;

@@ -44,7 +44,7 @@
         fois chargé.
       </li>
       <li>
-        <strong>Une seule exception, avec votre accord :</strong> « Prix du jour » télécharge la liste publique des cours de Binance. L'outil ne transmet ni la
+        <strong>Une seule exception, avec votre accord :</strong> « Prix du jour » et « Taux du jour » téléchargent la liste publique des cours de Binance. L'outil ne transmet ni la
         crypto choisie, ni quantité, ni montant ; il cherche le cours dans la réponse. Binance voit votre adresse IP, comme pour toute page web. L'autorisation
         se retire d'un clic, et le prix se saisit aussi à la main.
       </li>
@@ -72,6 +72,11 @@
       <li>Break-even = PMP ÷ (1 − f<sub>v</sub>). Valeur et plus-value latente sont nettes des frais de vente : la plus-value est nulle au break-even.</li>
       <li>L'exposition et la plus-value « après » sont évaluées au prix actuel, même si vous indiquez un prix d'achat plus bas.</li>
       <li>
+        <strong>Euro ou dollar</strong> : tous les montants d'un scénario sont dans la même devise, au choix ; les formules ne changent pas. Le dollar est
+        l'USDC, comme sur Binance. Changer de devise convertit les prix et le montant saisis au taux EUR/USDC (cours spot de la paire EURUSDC sur Binance, ou
+        votre propre taux) : multiplication par le taux de l'euro vers le dollar, division dans l'autre sens. Les quantités et les frais ne changent pas.
+      </li>
+      <li>
         Calculs en décimal exact ; montant à investir arrondi au centime supérieur pour que la cible soit atteinte. Chaque choix est publié dans le
         <a href={`${repo}/blob/main/docs/DECISIONS.md`} target="_blank" rel="noopener">journal des décisions</a>.
       </li>
@@ -96,8 +101,13 @@
         chaque palier séparément.
       </li>
       <li>
-        <strong>Prix du jour indicatif</strong> : dernier prix Binance converti en euros (paire EUR, sinon via USDT, USDC ou BTC), pas le prix que vous obtiendrez
-        sur votre plateforme.
+        <strong>Prix du jour indicatif</strong> : dernier prix Binance, en euros (paire EUR, sinon via USDT, USDC ou BTC) ou en dollars (paire USDC, sinon
+        USDT ÷ USDCUSDT, sinon prix en euros × EURUSDC), pas le prix que vous obtiendrez sur votre plateforme.
+      </li>
+      <li>
+        <strong>Un seul taux de change</strong> : la conversion se fait au taux du jour. Si vous avez acheté en dollars, votre prix moyen converti en euros n'est
+        pas ce que vos achats vous ont coûté en euros à l'époque, et l'outil ne simule pas l'évolution future du taux : un renfort en dollars garde un risque de
+        change que le calcul ignore. L'USDC est assimilé au dollar.
       </li>
       <li><strong>Une seule crypto</strong> à la fois.</li>
     </ul>

@@ -10,7 +10,7 @@
   import About from './lib/ui/About.svelte';
   import Support from 'commun-crypto/ui/Support.svelte';
   import { AUTHOR } from 'commun-crypto/support';
-  import { eur, eurPrice } from 'commun-crypto/format';
+  import { formatter } from './lib/core/currency';
   import { amountToInvest } from 'commun-crypto/renfort';
 
   // Deux vues : le calculateur et la page « À propos et limites » (#a-propos).
@@ -59,6 +59,7 @@
     target: 'le prix moyen visé',
     budget: 'le montant à investir',
     buyPrice: "le prix d'achat",
+    fx: 'le taux EUR/USDC',
   };
 
   // Champs vides : listés dans « Pour commencer » plutôt qu'affichés en erreur.
@@ -68,8 +69,8 @@
 
   const announce = $derived.by(() => {
     if (!result) return '';
-    if (result.target?.status === 'ok' && result.buy) return `Montant à investir : ${eur(amountToInvest(result.buy.amount))}.`;
-    if (result.values.mode === 'budget' && result.buy) return `Nouveau prix moyen : ${eurPrice(result.buy.after.pmp)}.`;
+    if (result.target?.status === 'ok' && result.buy) return `Montant à investir : ${formatter(result.values.currency).money(amountToInvest(result.buy.amount))}.`;
+    if (result.values.mode === 'budget' && result.buy) return `Nouveau prix moyen : ${formatter(result.values.currency).price(result.buy.after.pmp)}.`;
     return result.target?.status === 'unreachable' ? 'Cible inatteignable à ce prix d’achat.' : '';
   });
 </script>

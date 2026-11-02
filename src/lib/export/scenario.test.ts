@@ -72,3 +72,38 @@ describe('lien de partage', () => {
     expect(back?.mode).toBe('target');
   });
 });
+
+describe('devise (D-019)', () => {
+  const usd = { currency: 'USD' as const, pmp: '108500', price: '65100', target: '86800', fx: '1,085' };
+
+  it('CSV en dollars : devise, taux et unités', () => {
+    const csv = scenarioCsv(result(usd));
+    expect(csv).toContain('Devise;Dollar, USDC ($)');
+    expect(csv).toContain('Taux EUR/USDC ($ pour 1 €);1,085');
+    expect(csv).toContain('Prix moyen actuel ($);108500,00');
+    expect(csv).toContain('Montant à investir, frais compris ($);');
+    expect(csv).not.toContain('(€);');
+  });
+
+  it('CSV en euros sans taux : pas de ligne de taux', () => {
+    const csv = scenarioCsv(result());
+    expect(csv).toContain('Devise;Euro (€)');
+    expect(csv).not.toContain('Taux EUR/USDC');
+  });
+
+  it('texte en dollars avec le taux', () => {
+    const t = scenarioText(result(usd)).replace(/[  ]/g, ' ');
+    expect(t).toContain('108 500,00 $ de prix moyen');
+    expect(t).toContain('Taux EUR/USDC : 1 € = 1,0850 $.');
+  });
+
+  it('lien de partage : devise et taux, aller-retour ; anciens liens lus en euros', () => {
+    const f = form(usd);
+    const hash = shareFragment(f);
+    expect(hash).toContain('d=usd');
+    expect(hash).toContain('fx=1%2C085');
+    expect(readShareFragment(hash)).toEqual(f);
+    expect(readShareFragment('#partage?mode=cible&q=1&pmp=100&c=50&y=75')?.currency).toBe('EUR');
+    expect(readShareFragment('#partage?mode=cible&d=gbp&q=1')?.currency).toBe('EUR');
+  });
+});
